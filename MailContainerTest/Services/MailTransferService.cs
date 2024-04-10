@@ -1,92 +1,73 @@
-﻿using MailContainerTest.Data;
-using MailContainerTest.Types;
-using System.Configuration;
+﻿using System.Configuration;
+using MailContainerTest.Constants;
+using MailContainerTest.Dtos;
+using MailContainerTest.Enums;
+using MailContainerTest.Interfaces;
+using MailContainerTest.Models;
 
 namespace MailContainerTest.Services
 {
     public class MailTransferService : IMailTransferService
     {
+        private readonly IMailContainerDataStoreProvider _dataStoreProvider;
+
+        public MailTransferService(IMailContainerDataStoreProvider dataStoreProvider)
+        {
+            _dataStoreProvider = dataStoreProvider;
+        }
+
         public MakeMailTransferResult MakeMailTransfer(MakeMailTransferRequest request)
         {
-            var dataStoreType = ConfigurationManager.AppSettings["DataStoreType"];
-
+            var dataStoreType = ConfigurationManager.AppSettings[AppConfigurationConstants.DataStoreType];
+            var result = new MakeMailTransferResult { Success = true };
+            var dataStore = _dataStoreProvider.GetContainerDataStore(dataStoreType == DataStoreTypesConstants.BackupDataStore ? DataStoreTypesConstants.BackupDataStore : DataStoreTypesConstants.MainDataStore);
             MailContainer mailContainer = null;
+            
+            mailContainer = dataStore.GetMailContainer(request.SourceMailContainerNumber);
 
-            if (dataStoreType == "Backup")
+            if (mailContainer == null)
             {
-                var mailContainerDataStore = new BackupMailContainerDataStore();
-                mailContainer = mailContainerDataStore.GetMailContainer(request.SourceMailContainerNumber);
-
-            } else
-            {
-                var mailContainerDataStore = new MailContainerDataStore();
-                mailContainer = mailContainerDataStore.GetMailContainer(request.SourceMailContainerNumber);
+                result.Success = false;
             }
-
-            var result = new MakeMailTransferResult();
-
-            switch (request.MailType)
+            else
             {
-                case MailType.StandardLetter:
-                    if (mailContainer == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.StandardLetter))
-                    {
-                        result.Success = false;
-                    }
-                    break;
+                switch (request.MailType)
+                {
+                    case MailType.StandardLetter:
+                        if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.StandardLetter))
+                        {
+                            result.Success = false;
+                        }
+                        break;
+                    case MailType.LargeLetter:
+                        if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.LargeLetter))
+                        {
+                            result.Success = false;
+                        }
+                        else if (mailContainer.Capacity < request.NumberOfMailItems)
+                        {
+                            result.Success = false;
+                        }
+                        break;
+                    case MailType.SmallParcel:
+                        if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.SmallParcel))
+                        {
+                            result.Success = false;
 
-                case MailType.LargeLetter:
-                    if (mailContainer == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.LargeLetter))
-                    {
-                        result.Success = false;
-                    }
-                    else if (mailContainer.Capacity < request.NumberOfMailItems)
-                    {
-                        result.Success = false;
-                    }
-                    break;
-
-                case MailType.SmallParcel:
-                    if (mailContainer == null)
-                    {
-                        result.Success = false;
-                    }
-                    else if (!mailContainer.AllowedMailType.HasFlag(AllowedMailType.SmallParcel))
-                    {
-                        result.Success = false;
-
-                    }
-                    else if (mailContainer.Status != MailContainerStatus.Operational)
-                    {
-                        result.Success = false;
-                    }
-                    break;
+                        }
+                        else if (mailContainer.Status != MailContainerStatus.Operational)
+                        {
+                            result.Success = false;
+                        }
+                        break;
+                }
             }
 
             if (result.Success)
             {
                 mailContainer.Capacity -= request.NumberOfMailItems;
-
-                if (dataStoreType == "Backup")
-                {
-                    var mailContainerDataStore = new BackupMailContainerDataStore();
-                    mailContainerDataStore.UpdateMailContainer(mailContainer);
-
-                }
-                else
-                {
-                    var mailContainerDataStore = new MailContainerDataStore();
-                    mailContainerDataStore.UpdateMailContainer(mailContainer);
-                }
+                dataStore.UpdateMailContainer(mailContainer);
             }
-
             return result;
         }
     }

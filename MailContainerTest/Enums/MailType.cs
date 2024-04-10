@@ -1,4 +1,4 @@
-﻿namespace MailContainerTest.Types
+﻿namespace MailContainerTest.Enums
 {
     public enum MailType
     {

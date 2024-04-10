@@ -1,6 +1,6 @@
-﻿using MailContainerTest.Types;
+﻿using MailContainerTest.Dtos;
 
-namespace MailContainerTest.Services
+namespace MailContainerTest.Interfaces
 {
     public interface IMailTransferService
     {
