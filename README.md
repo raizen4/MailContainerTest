@@ -1,9 +1,10 @@
 ### About the solution proposed (by the candidate)
 - Please note that this code has been developed on a MAC machine using RIDER as IDE. Since it is NET6.0 it should work absolutely fine on both Windows and macOS.
-- Please note I have begun coding for this test at 3:45PM . The email was received at 14:18PM but I was unable to work on the code challange due to being in meetings until 3:45PM.
+- Please note I have begun coding for this test at 3:45PM . The email was received at 14:18PM but I was unable to work on the code challenge due to being in meetings until 3:45PM.
 - I have added a few comments around the Models and Dtos classes, specifically around unused properties. Usually I am not a fan of having unused properties lying around but given I have no context of the grater system, I have left them in. Potentially, given a bit more context and time, I would have removed the unused ones.
 - I have renamed most of the folders but there is still a few places (Constants folder and Services Folder) where the naming could be improved. Given more time, I would have definitely improved the naming.
 - My testing framework of choice was XUnit, the DI container proposed was Microsoft.Extensions.DependencyInjection. I have written a few tests for the MailTransferService class and MailContainerDataStoreProvider class. Given more time, I would have definitely increased the coverage adding tests for edge cases and happy paths. Also, I would have used Theories and InlineData to streamline all use-cases of the code.
+- The container provider that I created can be further improved. I have not realised, but I could have done a switch statement based on the type of data store.
 
 ### Mail Container Test 
 
